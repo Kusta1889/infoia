@@ -22,10 +22,20 @@ class Article:
     author: str = None
 
 
-# Category definitions with keywords
+# Category definitions with keywords (priority = order of display)
 CATEGORIES = {
+    "📰 Noticias de Industria": {
+        "priority": 1,  # FIRST
+        "keywords": [
+            "funding", "investment", "acquisition", "partnership",
+            "million", "billion", "startup", "company", "ceo",
+            "regulation", "policy", "government", "law",
+            "inversión", "empresa", "regulación"
+        ],
+        "sources": ["TechCrunch", "VentureBeat", "MIT Tech Review", "The Decoder", "The Verge"]
+    },
     "🚀 Lanzamientos de Modelos": {
-        "priority": 1,
+        "priority": 2,
         "keywords": [
             "launch", "release", "announce", "new model", "introducing",
             "gpt-5", "gpt-4", "claude", "gemini", "llama", "mistral",
@@ -33,16 +43,6 @@ CATEGORIES = {
             "lanzamiento", "nuevo modelo", "actualización"
         ],
         "sources": ["OpenAI", "Anthropic", "DeepMind", "LLM Tracker"]
-    },
-    "📄 Research & Papers": {
-        "priority": 2,
-        "keywords": [
-            "paper", "research", "study", "arxiv", "conference",
-            "neural", "transformer", "attention", "benchmark",
-            "training", "fine-tune", "dataset", "evaluation",
-            "investigación", "estudio"
-        ],
-        "sources": ["arXiv", "HuggingFace Papers", "BAIR", "Paper Digest"]
     },
     "📊 Benchmarks & Rankings": {
         "priority": 3,
@@ -53,18 +53,8 @@ CATEGORIES = {
         ],
         "sources": ["Artificial Analysis", "LMArena"]
     },
-    "📰 Noticias de Industria": {
-        "priority": 4,
-        "keywords": [
-            "funding", "investment", "acquisition", "partnership",
-            "million", "billion", "startup", "company", "ceo",
-            "regulation", "policy", "government", "law",
-            "inversión", "empresa", "regulación"
-        ],
-        "sources": ["TechCrunch", "VentureBeat", "MIT Tech Review", "The Decoder"]
-    },
     "🛠️ Herramientas & APIs": {
-        "priority": 5,
+        "priority": 4,
         "keywords": [
             "api", "tool", "library", "framework", "sdk",
             "open source", "github", "huggingface", "model",
@@ -74,9 +64,19 @@ CATEGORIES = {
         "sources": ["HuggingFace Models", "Hugging Face Blog"]
     },
     "🇪🇸 En Español": {
-        "priority": 6,
+        "priority": 5,
         "keywords": [],  # Determined by source
         "sources": ["Xataka"]
+    },
+    "📄 Research & Papers": {
+        "priority": 6,  # LAST
+        "keywords": [
+            "paper", "research", "study", "arxiv", "conference",
+            "neural", "transformer", "attention", "benchmark",
+            "training", "fine-tune", "dataset", "evaluation",
+            "investigación", "estudio"
+        ],
+        "sources": ["arXiv", "HuggingFace Papers", "BAIR", "Paper Digest"]
     },
 }
 

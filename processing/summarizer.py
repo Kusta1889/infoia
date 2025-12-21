@@ -65,7 +65,7 @@ class Summarizer:
         return None
     
     async def summarize_and_translate(self, article: Article) -> Article:
-        """Summarize article content and translate to Spanish."""
+        """Summarize article content and translate title and summary to Spanish."""
         if not self.api_key:
             article.summary_es = article.summary
             return article
@@ -74,26 +74,48 @@ class Summarizer:
         if not content:
             content = article.title
         
-        # Truncate to reduce tokens
-        content = content[:1000]
+        # Truncate to reduce tokens but allow more content for better summary
+        content = content[:1500]
         
-        prompt = f"""Resume en 2 oraciones en español:
+        prompt = f"""Eres un experto en IA y tecnología. Debes:
 
-Título: {article.title}
-Fuente: {article.source}
+1. TRADUCIR el título al español (mantén nombres propios como GPT, Claude, etc.)
+2. RESUMIR el contenido en 4-5 oraciones en español, explicando:
+   - Qué es la novedad o noticia principal
+   - Por qué es importante o relevante
+   - Detalles técnicos clave si los hay
+
+Título original: {article.title}
 Contenido: {content}
 
-Solo el resumen, sin prefijos."""
+Responde EXACTAMENTE en este formato:
+TÍTULO: [título traducido]
+RESUMEN: [resumen detallado de 4-5 oraciones]"""
 
         messages = [
-            {"role": "system", "content": "Resumes noticias de IA en español de forma concisa."},
+            {"role": "system", "content": "Traduces y resumes noticias de IA al español de forma clara y detallada."},
             {"role": "user", "content": prompt}
         ]
         
-        summary = await self._call_api(messages)
+        result = await self._call_api(messages, max_tokens=400)
         
-        if summary:
-            article.summary_es = summary
+        if result:
+            # Parse the response
+            lines = result.strip().split('\n')
+            title_es = article.title
+            summary_es = article.summary
+            
+            for line in lines:
+                if line.startswith('TÍTULO:'):
+                    title_es = line.replace('TÍTULO:', '').strip()
+                elif line.startswith('RESUMEN:'):
+                    summary_es = line.replace('RESUMEN:', '').strip()
+                elif summary_es and not line.startswith('TÍTULO'):
+                    # Continuation of summary
+                    summary_es += ' ' + line.strip()
+            
+            article.title = title_es
+            article.summary_es = summary_es
         else:
             article.summary_es = article.summary
         

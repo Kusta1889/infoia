@@ -180,11 +180,6 @@ EMAIL_TEMPLATE = """
         <div class="header">
             <h1>🤖 infoIA</h1>
             <div class="date">{{ date }}</div>
-            <div class="stats">
-                <span class="stat">📰 {{ total_articles }} artículos</span>
-                <span class="stat">📂 {{ total_categories }} categorías</span>
-                <span class="stat">🌐 {{ total_sources }} fuentes</span>
-            </div>
         </div>
         
         {% if grouped_articles %}
@@ -196,10 +191,6 @@ EMAIL_TEMPLATE = """
                 <div class="article">
                     <div class="article-title">
                         <a href="{{ article.url }}" target="_blank">{{ article.title }}</a>
-                    </div>
-                    <div class="article-meta">
-                        📍 {{ article.source }}
-                        {% if article.author %} • ✍️ {{ article.author }}{% endif %}
                     </div>
                     <div class="article-summary">
                         {{ article.summary_es or article.summary }}
