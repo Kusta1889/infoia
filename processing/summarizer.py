@@ -41,52 +41,52 @@ class Summarizer:
             base_url=self.base_url
         )
     
-    async def _call_api(self, messages: List[dict], max_tokens: int = 500) -> Optional[str]:
-        """Make API call to Groq."""
-        try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=0.3  # Lower for more consistent summaries
-            )
-            return response.choices[0].message.content.strip()
-        except Exception as e:
-            print(f"[Summarizer] API error: {e}")
-            return None
+    async def _call_api(self, messages: List[dict], max_tokens: int = 300, retries: int = 3) -> Optional[str]:
+        """Make API call to Groq with retry logic."""
+        for attempt in range(retries):
+            try:
+                response = await self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=0.3
+                )
+                return response.choices[0].message.content.strip()
+            except Exception as e:
+                error_str = str(e)
+                if "rate_limit" in error_str.lower() or "429" in error_str:
+                    wait_time = (attempt + 1) * 3  # 3, 6, 9 seconds
+                    print(f"[Summarizer] Rate limit, waiting {wait_time}s...")
+                    await asyncio.sleep(wait_time)
+                else:
+                    print(f"[Summarizer] API error: {e}")
+                    return None
+        print(f"[Summarizer] Max retries exceeded")
+        return None
     
     async def summarize_and_translate(self, article: Article) -> Article:
         """Summarize article content and translate to Spanish."""
         if not self.api_key:
-            # No API key - just use existing summary
             article.summary_es = article.summary
             return article
         
-        # Prepare content to summarize
         content = article.content or article.summary
         if not content:
             content = article.title
         
-        # Truncate if too long
-        content = content[:2000]
+        # Truncate to reduce tokens
+        content = content[:1000]
         
-        prompt = f"""Eres un asistente experto en IA y tecnología. Tu tarea es:
-
-1. Resumir el siguiente artículo en 2-3 oraciones concisas
-2. El resumen DEBE estar en español
-3. Mantén los nombres técnicos y de productos en inglés (GPT-4, Claude, etc.)
-4. Enfócate en lo más importante y novedoso
+        prompt = f"""Resume en 2 oraciones en español:
 
 Título: {article.title}
 Fuente: {article.source}
+Contenido: {content}
 
-Contenido:
-{content}
-
-Responde ÚNICAMENTE con el resumen en español, sin prefijos ni explicaciones."""
+Solo el resumen, sin prefijos."""
 
         messages = [
-            {"role": "system", "content": "Eres un experto en IA que resume noticias de forma concisa y precisa en español."},
+            {"role": "system", "content": "Resumes noticias de IA en español de forma concisa."},
             {"role": "user", "content": prompt}
         ]
         
@@ -95,31 +95,25 @@ Responde ÚNICAMENTE con el resumen en español, sin prefijos ni explicaciones."
         if summary:
             article.summary_es = summary
         else:
-            # Fallback to original summary
             article.summary_es = article.summary
         
         return article
     
-    async def process_batch(self, articles: List[Article], batch_size: int = 5) -> List[Article]:
-        """Process articles in batches to avoid rate limits."""
+    async def process_batch(self, articles: List[Article], max_articles: int = 15) -> List[Article]:
+        """Process articles sequentially to avoid rate limits."""
         processed = []
         
-        for i in range(0, len(articles), batch_size):
-            batch = articles[i:i + batch_size]
+        # Limit total articles to avoid excessive API calls
+        articles = articles[:max_articles]
+        
+        for i, article in enumerate(articles):
+            print(f"[Summarizer] Processing {i+1}/{len(articles)}: {article.title[:50]}...")
+            result = await self.summarize_and_translate(article)
+            processed.append(result)
             
-            # Process batch concurrently
-            tasks = [self.summarize_and_translate(article) for article in batch]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            
-            for result in results:
-                if isinstance(result, Article):
-                    processed.append(result)
-                elif isinstance(result, Exception):
-                    print(f"[Summarizer] Batch error: {result}")
-            
-            # Small delay between batches to avoid rate limits
-            if i + batch_size < len(articles):
-                await asyncio.sleep(1)
+            # Wait between each article to respect rate limit
+            if i < len(articles) - 1:
+                await asyncio.sleep(2)  # 2 seconds between each
         
         print(f"[Summarizer] Processed {len(processed)} articles")
         return processed
