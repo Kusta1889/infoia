@@ -252,7 +252,15 @@ class EmailComposer:
             Tuple of (subject, html_body)
         """
         today = datetime.now()
-        date_str = today.strftime("%A, %d de %B de %Y")
+        
+        # Spanish day and month names
+        days_es = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+        months_es = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                     'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+        
+        day_name = days_es[today.weekday()]
+        month_name = months_es[today.month - 1]
+        date_str = f"{day_name}, {today.day} de {month_name} de {today.year}"
         
         # Calculate stats
         total_articles = sum(len(arts) for arts in grouped_articles.values())

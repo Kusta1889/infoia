@@ -9,6 +9,11 @@ import schedule
 import time
 import sys
 import os
+
+# Fix Windows console encoding for emojis
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 from datetime import datetime
 from typing import List, Dict
 
