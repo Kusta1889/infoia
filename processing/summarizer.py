@@ -1,6 +1,6 @@
 """
 Article Summarizer
-Uses DeepSeek API to summarize articles and translate to Spanish.
+Uses Groq API to summarize articles and translate to Spanish.
 """
 
 import asyncio
@@ -26,12 +26,12 @@ class Article:
 
 
 class Summarizer:
-    """Summarizes and translates articles using DeepSeek API."""
+    """Summarizes and translates articles using Groq API."""
     
     def __init__(self, api_key: str = None, base_url: str = None, model: str = None):
-        self.api_key = api_key or os.getenv("DEEPSEEK_API_KEY", "")
-        self.base_url = base_url or os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-        self.model = model or os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+        self.api_key = api_key or os.getenv("GROQ_API_KEY", "")
+        self.base_url = base_url or "https://api.groq.com/openai/v1"
+        self.model = model or os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
         
         if not self.api_key:
             print("[Summarizer] Warning: No API key configured")
@@ -42,7 +42,7 @@ class Summarizer:
         )
     
     async def _call_api(self, messages: List[dict], max_tokens: int = 500) -> Optional[str]:
-        """Make API call to DeepSeek."""
+        """Make API call to Groq."""
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
