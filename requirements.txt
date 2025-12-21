@@ -1,0 +1,31 @@
+# AI News Aggregator - Dependencies
+
+# RSS and Feed Parsing
+feedparser==6.0.11
+
+# HTTP and Async
+aiohttp==3.9.1
+requests==2.31.0
+
+# Web Scraping
+beautifulsoup4==4.12.2
+lxml==5.1.0
+playwright==1.40.0
+
+# OpenAI-compatible API (for DeepSeek)
+openai==1.6.1
+
+# Environment and Configuration
+python-dotenv==1.0.0
+
+# Scheduling
+schedule==1.2.1
+
+# Email
+jinja2==3.1.2
+
+# Database (for deduplication cache)
+aiosqlite==0.19.0
+
+# Utilities
+python-dateutil==2.8.2
