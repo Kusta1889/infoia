@@ -77,23 +77,30 @@ class Summarizer:
         # Truncate to reduce tokens but allow more content for better summary
         content = content[:1500]
         
-        prompt = f"""Eres un experto en IA y tecnología. Debes:
+        prompt = f"""Eres un periodista tecnológico nativo en español. Tu tarea es REESCRIBIR la siguiente noticia en español de forma natural y profesional.
 
-1. TRADUCIR el título al español (mantén nombres propios como GPT, Claude, etc.)
-2. RESUMIR el contenido en 4-5 oraciones en español, explicando:
-   - Qué es la novedad o noticia principal
-   - Por qué es importante o relevante
-   - Detalles técnicos clave si los hay
+REGLAS IMPORTANTES:
+1. El título debe sonar NATURAL en español, como si lo hubiera escrito un periodista hispanohablante. NO hagas traducciones literales.
+2. Mantén los nombres propios en inglés (GPT, Claude, OpenAI, etc.)
+3. El resumen debe ser de 4-5 oraciones, claro y bien redactado
+4. Evita construcciones gramaticales que suenen "traducidas del inglés"
+
+EJEMPLOS DE TÍTULOS:
+- MAL: "Anunciar a los consumidores que un anuncio es generado por IA reduce clics"
+- BIEN: "Los usuarios hacen menos clic cuando saben que un anuncio fue creado con IA"
+
+- MAL: "OpenAI lanza actualización para GPT-4"  
+- BIEN: "OpenAI presenta una nueva versión de GPT-4"
 
 Título original: {article.title}
 Contenido: {content}
 
-Responde EXACTAMENTE en este formato:
-TÍTULO: [título traducido]
-RESUMEN: [resumen detallado de 4-5 oraciones]"""
+Responde EXACTAMENTE así:
+TÍTULO: [título en español natural]
+RESUMEN: [resumen de 4-5 oraciones]"""
 
         messages = [
-            {"role": "system", "content": "Traduces y resumes noticias de IA al español de forma clara y detallada."},
+            {"role": "system", "content": "Eres un periodista tecnológico hispanohablante. Escribes noticias de IA de forma natural y profesional, nunca como traducciones literales."},
             {"role": "user", "content": prompt}
         ]
         
