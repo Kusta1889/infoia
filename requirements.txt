@@ -15,6 +15,9 @@ playwright==1.40.0
 # OpenAI-compatible API (for DeepSeek)
 openai==1.6.1
 
+# Google Gemini API
+google-generativeai==0.8.0
+
 # Environment and Configuration
 python-dotenv==1.0.0
 

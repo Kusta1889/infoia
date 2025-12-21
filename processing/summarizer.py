@@ -1,10 +1,10 @@
 """
 Article Summarizer
-Uses Groq API to summarize articles and translate to Spanish.
+Uses Google Gemini API to summarize articles and translate to Spanish.
 """
 
 import asyncio
-from openai import AsyncOpenAI
+import google.generativeai as genai
 from typing import List, Optional
 from dataclasses import dataclass
 import os
@@ -26,36 +26,32 @@ class Article:
 
 
 class Summarizer:
-    """Summarizes and translates articles using Groq API."""
+    """Summarizes and translates articles using Google Gemini API."""
     
-    def __init__(self, api_key: str = None, base_url: str = None, model: str = None):
-        self.api_key = api_key or os.getenv("GROQ_API_KEY", "")
-        self.base_url = base_url or "https://api.groq.com/openai/v1"
-        self.model = model or os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    def __init__(self, api_key: str = None):
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY", "")
         
         if not self.api_key:
-            print("[Summarizer] Warning: No API key configured")
-        
-        self.client = AsyncOpenAI(
-            api_key=self.api_key,
-            base_url=self.base_url
-        )
+            print("[Summarizer] Warning: No GEMINI_API_KEY configured")
+        else:
+            genai.configure(api_key=self.api_key)
+            self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
     
-    async def _call_api(self, messages: List[dict], max_tokens: int = 300, retries: int = 3) -> Optional[str]:
-        """Make API call to Groq with retry logic."""
+    async def _call_api(self, prompt: str, retries: int = 3) -> Optional[str]:
+        """Make API call to Gemini with retry logic."""
         for attempt in range(retries):
             try:
-                response = await self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    max_tokens=max_tokens,
-                    temperature=0.3
+                # Run sync call in executor for async compatibility
+                loop = asyncio.get_event_loop()
+                response = await loop.run_in_executor(
+                    None,
+                    lambda: self.model.generate_content(prompt)
                 )
-                return response.choices[0].message.content.strip()
+                return response.text.strip()
             except Exception as e:
                 error_str = str(e)
-                if "rate_limit" in error_str.lower() or "429" in error_str:
-                    wait_time = (attempt + 1) * 3  # 3, 6, 9 seconds
+                if "429" in error_str or "quota" in error_str.lower():
+                    wait_time = (attempt + 1) * 2
                     print(f"[Summarizer] Rate limit, waiting {wait_time}s...")
                     await asyncio.sleep(wait_time)
                 else:
@@ -74,8 +70,8 @@ class Summarizer:
         if not content:
             content = article.title
         
-        # Truncate to reduce tokens but allow more content for better summary
-        content = content[:1500]
+        # Truncate to reduce tokens
+        content = content[:2000]
         
         prompt = f"""Eres un periodista tecnológico nativo en español. Tu tarea es REESCRIBIR la siguiente noticia en español de forma natural y profesional.
 
@@ -99,12 +95,7 @@ Responde EXACTAMENTE así:
 TÍTULO: [título en español natural]
 RESUMEN: [resumen de 4-5 oraciones]"""
 
-        messages = [
-            {"role": "system", "content": "Eres un periodista tecnológico hispanohablante. Escribes noticias de IA de forma natural y profesional, nunca como traducciones literales."},
-            {"role": "user", "content": prompt}
-        ]
-        
-        result = await self._call_api(messages, max_tokens=400)
+        result = await self._call_api(prompt)
         
         if result:
             # Parse the response
@@ -128,11 +119,11 @@ RESUMEN: [resumen de 4-5 oraciones]"""
         
         return article
     
-    async def process_batch(self, articles: List[Article], max_articles: int = 15) -> List[Article]:
-        """Process articles sequentially to avoid rate limits."""
+    async def process_batch(self, articles: List[Article], max_articles: int = 20) -> List[Article]:
+        """Process articles sequentially to respect API limits."""
         processed = []
         
-        # Limit total articles to avoid excessive API calls
+        # Gemini has generous limits, process more articles
         articles = articles[:max_articles]
         
         for i, article in enumerate(articles):
@@ -140,9 +131,9 @@ RESUMEN: [resumen de 4-5 oraciones]"""
             result = await self.summarize_and_translate(article)
             processed.append(result)
             
-            # Wait between each article to respect rate limit
+            # Small delay between calls
             if i < len(articles) - 1:
-                await asyncio.sleep(2)  # 2 seconds between each
+                await asyncio.sleep(1)
         
         print(f"[Summarizer] Processed {len(processed)} articles")
         return processed
@@ -152,35 +143,40 @@ RESUMEN: [resumen de 4-5 oraciones]"""
         if not articles:
             return articles
         
+        if not self.api_key:
+            print("[Summarizer] No API key - skipping summarization")
+            for article in articles:
+                article.summary_es = article.summary
+            return articles
+        
         return await self.process_batch(articles)
 
 
 # Convenience function
-async def summarize_articles(articles: List[Article], api_key: str = None) -> List[Article]:
-    """Summarize and translate articles."""
-    summarizer = Summarizer(api_key=api_key)
+async def summarize_articles(articles: List[Article]) -> List[Article]:
+    """Summarize and translate all articles."""
+    summarizer = Summarizer()
     return await summarizer.summarize_all(articles)
 
 
 if __name__ == "__main__":
-    from dotenv import load_dotenv
-    load_dotenv()
+    # Test
+    import asyncio
+    
+    test_article = Article(
+        id="1",
+        title="OpenAI announces GPT-5 with advanced reasoning",
+        url="https://example.com",
+        source="OpenAI Blog",
+        category="Releases",
+        published=None,
+        summary="OpenAI has released GPT-5, their most advanced model yet."
+    )
     
     async def test():
-        test_article = Article(
-            id="test",
-            title="OpenAI releases GPT-5 with advanced reasoning",
-            url="https://example.com",
-            source="OpenAI Blog",
-            category="Releases",
-            published=None,
-            summary="OpenAI has announced the release of GPT-5, their most advanced language model yet. The model features improved reasoning capabilities and can handle complex multi-step problems.",
-            content="OpenAI has announced the release of GPT-5, their most advanced language model yet. The model features improved reasoning capabilities and can handle complex multi-step problems. CEO Sam Altman stated this represents a major leap forward in AI capabilities."
-        )
-        
         summarizer = Summarizer()
         result = await summarizer.summarize_and_translate(test_article)
-        print(f"Original: {result.summary}")
-        print(f"Spanish: {result.summary_es}")
+        print(f"Title: {result.title}")
+        print(f"Summary: {result.summary_es}")
     
     asyncio.run(test())
