@@ -1,4 +1,4 @@
-# 🤖 InfoIA - AI Daily Digest
+# 🤖 infoIA
 
 Bot que recopila noticias de IA de **17 fuentes**, las resume y traduce al español, y publica un digest diario.
 

@@ -165,7 +165,7 @@ EMAIL_TEMPLATE = """
 <body>
     <div class="container">
         <div class="header">
-            <h1>🤖 AI Daily Digest</h1>
+            <h1>🤖 infoIA</h1>
             <div class="date">{{ date }}</div>
             <div class="stats">
                 <span class="stat">📰 {{ total_articles }} artículos</span>
@@ -239,7 +239,7 @@ class EmailComposer:
     def compose(
         self,
         grouped_articles: Dict[str, List[Article]],
-        subject_prefix: str = "🤖 AI Daily Digest"
+        subject_prefix: str = "🤖 infoIA"
     ) -> tuple[str, str]:
         """
         Compose HTML email.
@@ -277,7 +277,7 @@ class EmailComposer:
         """Generate plain text version of email."""
         lines = []
         lines.append("=" * 50)
-        lines.append("🤖 AI DAILY DIGEST")
+        lines.append("🤖 INFOIA")
         lines.append(f"📅 {datetime.now().strftime('%d/%m/%Y')}")
         lines.append("=" * 50)
         lines.append("")

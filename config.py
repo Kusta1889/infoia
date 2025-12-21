@@ -235,7 +235,7 @@ EMAIL_SMTP_PORT = int(os.getenv("EMAIL_SMTP_PORT", "587"))
 EMAIL_USER = os.getenv("EMAIL_USER", "")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "")
 EMAIL_TO = os.getenv("EMAIL_TO", "").split(",")
-EMAIL_SUBJECT_PREFIX = "🤖 AI Daily Digest"
+EMAIL_SUBJECT_PREFIX = "🤖 infoIA"
 
 
 # =============================================================================
