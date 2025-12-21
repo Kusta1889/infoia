@@ -32,7 +32,7 @@ CATEGORIES = {
             "regulation", "policy", "government", "law",
             "inversión", "empresa", "regulación"
         ],
-        "sources": ["TechCrunch", "VentureBeat", "MIT Tech Review", "The Decoder", "The Verge"]
+        "sources": ["TechCrunch", "VentureBeat", "MIT Tech Review", "The Decoder", "The Verge", "Ars Technica"]
     },
     "🚀 Lanzamientos de Modelos": {
         "priority": 2,
@@ -42,7 +42,7 @@ CATEGORIES = {
             "update", "version", "v2", "v3", "upgrade",
             "lanzamiento", "nuevo modelo", "actualización"
         ],
-        "sources": ["OpenAI", "Anthropic", "DeepMind", "LLM Tracker"]
+        "sources": ["OpenAI", "Anthropic", "DeepMind", "LLM Tracker", "Simon Willison"]
     },
     "📊 Benchmarks & Rankings": {
         "priority": 3,

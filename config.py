@@ -130,6 +130,20 @@ SOURCES: List[Source] = [
         source_type=SourceType.RSS,
         category=Category.INDUSTRY,
     ),
+    Source(
+        name="Ars Technica AI",
+        url="https://arstechnica.com/ai/",
+        rss_url="https://feeds.arstechnica.com/arstechnica/features",
+        source_type=SourceType.RSS,
+        category=Category.INDUSTRY,
+    ),
+    Source(
+        name="Simon Willison Blog",
+        url="https://simonwillison.net/",
+        rss_url="https://simonwillison.net/atom/everything/",
+        source_type=SourceType.RSS,
+        category=Category.RELEASES,  # Expert analysis on LLM releases
+    ),
     
     # --- WEB SCRAPING ---
     Source(
