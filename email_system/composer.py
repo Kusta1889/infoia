@@ -3,11 +3,24 @@ Email Composer
 Generates HTML email digest from articles.
 """
 
-from jinja2 import Template
+from jinja2 import Environment
 from datetime import datetime
 from typing import List, Dict
 from dataclasses import dataclass
 import html
+
+
+def _slugify(text: str) -> str:
+    """Convert category name to CSS class."""
+    mapping = {
+        "🚀 Lanzamientos de Modelos": "releases",
+        "📄 Research & Papers": "research",
+        "📊 Benchmarks & Rankings": "benchmarks",
+        "📰 Noticias de Industria": "industry",
+        "🛠️ Herramientas & APIs": "tools",
+        "🇪🇸 En Español": "spanish",
+    }
+    return mapping.get(text, "default")
 
 
 @dataclass
@@ -187,7 +200,6 @@ EMAIL_TEMPLATE = """
                     <div class="article-meta">
                         📍 {{ article.source }}
                         {% if article.author %} • ✍️ {{ article.author }}{% endif %}
-                        {% if article.published %} • 🕐 {{ article.published.strftime('%H:%M') if article.published.strftime else '' }}{% endif %}
                     </div>
                     <div class="article-summary">
                         {{ article.summary_es or article.summary }}
@@ -204,11 +216,8 @@ EMAIL_TEMPLATE = """
         {% endif %}
         
         <div class="footer">
-            <p>Generado automáticamente por <strong>AI News Aggregator</strong></p>
-            <p>Monitoreando 17 fuentes de IA 24/7</p>
-            <p style="margin-top: 10px; font-size: 11px; color: #666;">
-                ¿Quieres modificar las fuentes? Edita <code>config.py</code>
-            </p>
+            <p>Generado automáticamente por <strong>infoIA</strong></p>
+            <p>Monitoreando 18 fuentes de IA 24/7</p>
         </div>
     </div>
 </body>
@@ -220,21 +229,10 @@ class EmailComposer:
     """Composes HTML email digest."""
     
     def __init__(self):
-        self.template = Template(EMAIL_TEMPLATE)
-        # Add custom filter for category slugs
-        self.template.environment.filters['slug'] = self._slugify
-    
-    def _slugify(self, text: str) -> str:
-        """Convert category name to CSS class."""
-        mapping = {
-            "🚀 Lanzamientos de Modelos": "releases",
-            "📄 Research & Papers": "research",
-            "📊 Benchmarks & Rankings": "benchmarks",
-            "📰 Noticias de Industria": "industry",
-            "🛠️ Herramientas & APIs": "tools",
-            "🇪🇸 En Español": "spanish",
-        }
-        return mapping.get(text, "default")
+        # Create environment with custom filter BEFORE compiling template
+        self.env = Environment()
+        self.env.filters['slug'] = _slugify
+        self.template = self.env.from_string(EMAIL_TEMPLATE)
     
     def compose(
         self,
