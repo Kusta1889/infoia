@@ -24,7 +24,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install feedparser aiohttp requests beautifulsoup4 lxml openai python-dotenv jinja2 aiosqlite python-dateutil
+          pip install feedparser aiohttp requests beautifulsoup4 lxml openai python-dotenv jinja2 aiosqlite python-dateutil schedule
       
       - name: Run AI News Aggregator
         env:
