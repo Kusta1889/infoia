@@ -8,6 +8,20 @@ from datetime import datetime
 from typing import List, Dict
 from dataclasses import dataclass
 import html
+import re
+
+
+def strip_html_tags(text: str) -> str:
+    """Remove HTML tags, images, and clean up the text."""
+    if not text:
+        return ""
+    # Remove img tags
+    text = re.sub(r'<img[^>]*>', '', text, flags=re.IGNORECASE)
+    # Remove all other HTML tags
+    text = re.sub(r'<[^>]+>', '', text)
+    # Clean up whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
 
 
 def _slugify(text: str) -> str:
@@ -193,7 +207,7 @@ EMAIL_TEMPLATE = """
                         <a href="{{ article.url }}" target="_blank">{{ article.title }}</a>
                     </div>
                     <div class="article-summary">
-                        {{ article.summary_es or article.summary }}
+                        {{ (article.summary_es or article.summary) | strip_html }}
                     </div>
                 </div>
                 {% endfor %}
@@ -220,9 +234,10 @@ class EmailComposer:
     """Composes HTML email digest."""
     
     def __init__(self):
-        # Create environment with custom filter BEFORE compiling template
+        # Create environment with custom filters BEFORE compiling template
         self.env = Environment()
         self.env.filters['slug'] = _slugify
+        self.env.filters['strip_html'] = strip_html_tags
         self.template = self.env.from_string(EMAIL_TEMPLATE)
     
     def compose(

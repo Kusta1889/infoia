@@ -35,7 +35,7 @@ class Summarizer:
             print("[Summarizer] Warning: No GEMINI_API_KEY configured")
         else:
             genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+            self.model = genai.GenerativeModel('gemini-1.5-flash')
     
     async def _call_api(self, prompt: str, retries: int = 3) -> Optional[str]:
         """Make API call to Gemini with retry logic."""
@@ -50,8 +50,8 @@ class Summarizer:
                 return response.text.strip()
             except Exception as e:
                 error_str = str(e)
-                if "429" in error_str or "quota" in error_str.lower():
-                    wait_time = (attempt + 1) * 2
+                if "429" in error_str or "quota" in error_str.lower() or "resource" in error_str.lower():
+                    wait_time = (attempt + 1) * 10  # 10, 20, 30 seconds
                     print(f"[Summarizer] Rate limit, waiting {wait_time}s...")
                     await asyncio.sleep(wait_time)
                 else:
@@ -119,11 +119,11 @@ RESUMEN: [resumen de 4-5 oraciones]"""
         
         return article
     
-    async def process_batch(self, articles: List[Article], max_articles: int = 20) -> List[Article]:
+    async def process_batch(self, articles: List[Article], max_articles: int = 10) -> List[Article]:
         """Process articles sequentially to respect API limits."""
         processed = []
         
-        # Gemini has generous limits, process more articles
+        # Limit articles to avoid rate limits
         articles = articles[:max_articles]
         
         for i, article in enumerate(articles):
@@ -131,9 +131,9 @@ RESUMEN: [resumen de 4-5 oraciones]"""
             result = await self.summarize_and_translate(article)
             processed.append(result)
             
-            # Small delay between calls
+            # Delay between calls to respect rate limits
             if i < len(articles) - 1:
-                await asyncio.sleep(1)
+                await asyncio.sleep(3)
         
         print(f"[Summarizer] Processed {len(processed)} articles")
         return processed

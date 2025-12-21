@@ -73,18 +73,20 @@ SOURCES: List[Source] = [
         category=Category.RELEASES,
     ),
     
-    # --- RESEARCH (API) ---
+    # --- RESEARCH (DISABLED - user doesn't want papers) ---
     Source(
         name="arXiv AI Papers",
         url="https://arxiv.org/list/cs.AI/recent",
         source_type=SourceType.API,
         category=Category.RESEARCH,
+        enabled=False,  # DISABLED
     ),
     Source(
         name="Hugging Face Daily Papers",
         url="https://huggingface.co/papers",
         source_type=SourceType.API,
         category=Category.RESEARCH,
+        enabled=False,  # DISABLED
     ),
     Source(
         name="BAIR Blog",
@@ -92,6 +94,7 @@ SOURCES: List[Source] = [
         rss_url="https://bair.berkeley.edu/blog/feed.xml",
         source_type=SourceType.RSS,
         category=Category.RESEARCH,
+        enabled=False,  # DISABLED
     ),
     
     # --- NEWS SITES (RSS) ---
