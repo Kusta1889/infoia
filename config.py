@@ -123,6 +123,13 @@ SOURCES: List[Source] = [
         source_type=SourceType.RSS,
         category=Category.INDUSTRY,
     ),
+    Source(
+        name="The Verge AI",
+        url="https://www.theverge.com/ai-artificial-intelligence",
+        rss_url="https://www.theverge.com/ai-artificial-intelligence/rss/index.xml",
+        source_type=SourceType.RSS,
+        category=Category.INDUSTRY,
+    ),
     
     # --- WEB SCRAPING ---
     Source(
