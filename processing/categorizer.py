@@ -24,18 +24,8 @@ class Article:
 
 # Category definitions with keywords (priority = order of display)
 CATEGORIES = {
-    "📰 Noticias de Industria": {
-        "priority": 1,  # FIRST
-        "keywords": [
-            "funding", "investment", "acquisition", "partnership",
-            "million", "billion", "startup", "company", "ceo",
-            "regulation", "policy", "government", "law",
-            "inversión", "empresa", "regulación"
-        ],
-        "sources": ["TechCrunch", "VentureBeat", "MIT Tech Review", "The Decoder", "The Verge", "Ars Technica"]
-    },
     "🚀 Lanzamientos de Modelos": {
-        "priority": 2,
+        "priority": 1,  # FIRST - LLM updates at the top
         "keywords": [
             "launch", "release", "announce", "new model", "introducing",
             "gpt-5", "gpt-4", "claude", "gemini", "llama", "mistral",
@@ -43,6 +33,16 @@ CATEGORIES = {
             "lanzamiento", "nuevo modelo", "actualización"
         ],
         "sources": ["OpenAI", "Anthropic", "DeepMind", "LLM Tracker", "Simon Willison"]
+    },
+    "📰 Noticias de Industria": {
+        "priority": 2,
+        "keywords": [
+            "funding", "investment", "acquisition", "partnership",
+            "million", "billion", "startup", "company", "ceo",
+            "regulation", "policy", "government", "law",
+            "inversión", "empresa", "regulación"
+        ],
+        "sources": ["TechCrunch", "VentureBeat", "MIT Tech Review", "The Decoder", "The Verge", "Ars Technica"]
     },
     "📊 Benchmarks & Rankings": {
         "priority": 3,
@@ -68,17 +68,12 @@ CATEGORIES = {
         "keywords": [],  # Determined by source
         "sources": ["Xataka"]
     },
-    "📄 Research & Papers": {
-        "priority": 6,  # LAST
-        "keywords": [
-            "paper", "research", "study", "arxiv", "conference",
-            "neural", "transformer", "attention", "benchmark",
-            "training", "fine-tune", "dataset", "evaluation",
-            "investigación", "estudio"
-        ],
-        "sources": ["arXiv", "HuggingFace Papers", "BAIR", "Paper Digest"]
-    },
 }
+
+# Categories to exclude from output
+EXCLUDED_CATEGORIES = [
+    "📄 Research & Papers",
+]
 
 
 class Categorizer:
@@ -141,14 +136,27 @@ class Categorizer:
         # First categorize
         articles = self.categorize_all(articles)
         
-        # Group
+        # Group (excluding excluded categories)
         groups = defaultdict(list)
         for article in articles:
-            groups[article.category].append(article)
+            if article.category not in EXCLUDED_CATEGORIES:
+                groups[article.category].append(article)
         
-        # Sort each group by publication date (newest first)
+        # Sort each group by publication date (newest first, handle None and mixed timezones)
+        from datetime import datetime
+        def get_sort_key(article):
+            if article.published is None:
+                return datetime.min
+            try:
+                # Convert to timestamp to avoid timezone issues
+                if hasattr(article.published, 'timestamp'):
+                    return datetime.fromtimestamp(article.published.timestamp())
+                return article.published
+            except:
+                return datetime.min
+        
         for category in groups:
-            groups[category].sort(key=lambda a: a.published, reverse=True)
+            groups[category].sort(key=get_sort_key, reverse=True)
         
         # Return ordered dict by category priority
         ordered = {}
@@ -156,7 +164,7 @@ class Categorizer:
             self.categories.keys(),
             key=lambda c: self.categories[c]["priority"]
         ):
-            if category in groups:
+            if category in groups and category not in EXCLUDED_CATEGORIES:
                 ordered[category] = groups[category]
         
         return ordered
