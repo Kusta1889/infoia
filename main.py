@@ -206,14 +206,15 @@ class AINewsAggregator:
         print("📄 SAVING TO GITHUB PAGES")
         print("=" * 50)
         
-        # Compose HTML
-        composer = EmailComposer()
-        subject, html_body = composer.compose(grouped_articles)
-        
-        # Save to docs/index.html
+        # Get docs directory first
         docs_dir = os.path.join(os.path.dirname(__file__), "docs")
         os.makedirs(docs_dir, exist_ok=True)
         
+        # Compose HTML with archive links
+        composer = EmailComposer()
+        subject, html_body = composer.compose(grouped_articles, docs_dir=docs_dir)
+        
+        # Save to docs/index.html
         output_path = os.path.join(docs_dir, "index.html")
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(html_body)

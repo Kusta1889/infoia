@@ -187,6 +187,43 @@ EMAIL_TEMPLATE = """
         .category-industry .article { border-left-color: #8b5cf6; }
         .category-tools .article { border-left-color: #ef4444; }
         .category-spanish .article { border-left-color: #ec4899; }
+        
+        /* Archive Section */
+        .archive-section {
+            padding: 25px;
+            background: #f8f9fa;
+            border-top: 2px solid #667eea;
+        }
+        
+        .archive-section h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #1a1a2e;
+        }
+        
+        .archive-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .archive-link {
+            display: inline-block;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .archive-link:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -220,6 +257,17 @@ EMAIL_TEMPLATE = """
             </div>
         {% endif %}
         
+        {% if archive_dates %}
+        <div class="archive-section">
+            <h3>📅 Noticias Anteriores</h3>
+            <div class="archive-list">
+                {% for archive in archive_dates %}
+                <a href="{{ archive.filename }}" class="archive-link">{{ archive.display }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
         <div class="footer">
             <p>Generado automáticamente por <strong>infoIA</strong></p>
             <p>Monitoreando 18 fuentes de IA 24/7</p>
@@ -243,7 +291,8 @@ class EmailComposer:
     def compose(
         self,
         grouped_articles: Dict[str, List[Article]],
-        subject_prefix: str = "🤖 infoIA"
+        subject_prefix: str = "🤖 infoIA",
+        docs_dir: str = None
     ) -> tuple[str, str]:
         """
         Compose HTML email.
@@ -251,6 +300,10 @@ class EmailComposer:
         Returns:
             Tuple of (subject, html_body)
         """
+        import os
+        import glob
+        from datetime import timedelta
+        
         today = datetime.now()
         
         # Spanish day and month names
@@ -270,6 +323,27 @@ class EmailComposer:
             for article in articles:
                 sources.add(article.source)
         
+        # Get archive dates from existing files (last 7 days, excluding today)
+        archive_dates = []
+        if docs_dir and os.path.exists(docs_dir):
+            today_str = today.strftime("%Y-%m-%d")
+            for i in range(1, 8):  # Last 7 days
+                past_date = today - timedelta(days=i)
+                past_str = past_date.strftime("%Y-%m-%d")
+                filename = f"digest-{past_str}.html"
+                filepath = os.path.join(docs_dir, filename)
+                
+                if os.path.exists(filepath):
+                    # Format display date in Spanish
+                    past_day_name = days_es[past_date.weekday()]
+                    past_month_name = months_es[past_date.month - 1]
+                    display = f"{past_day_name} {past_date.day}"
+                    archive_dates.append({
+                        "filename": filename,
+                        "display": display,
+                        "date": past_date
+                    })
+        
         # Render HTML
         html_body = self.template.render(
             subject=subject_prefix,
@@ -277,8 +351,10 @@ class EmailComposer:
             grouped_articles=grouped_articles,
             total_articles=total_articles,
             total_categories=total_categories,
-            total_sources=len(sources)
+            total_sources=len(sources),
+            archive_dates=archive_dates
         )
+        
         
         # Generate subject line
         subject = f"{subject_prefix} - {today.strftime('%d/%m/%Y')} ({total_articles} artículos)"
